@@ -14,6 +14,8 @@ import androidx.fragment.app.Fragment
 import com.google.android.gms.location.LocationServices
 import fr.lucas.weatherapp.data.CurrentLocation
 import fr.lucas.weatherapp.databinding.FragmentHomeBinding
+import fr.lucas.weatherapp.storage.SharedPreferencesManager
+import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class homeFragment : Fragment() {
@@ -30,6 +32,9 @@ class homeFragment : Fragment() {
     private val weatherDataAdapter = weatherDataAdapter(
         onLocationClicked = { showLocationOptions() }
     )
+
+    private val sharedPreferencesManager: SharedPreferencesManager by inject()
+
 
     private val locationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -53,7 +58,7 @@ class homeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setWeatherDataAdapter()
-        setWeatherData()
+        setWeatherData(currentLocation = sharedPreferencesManager.getCurrentLocation())
         setObservers()
     }
 
@@ -66,6 +71,7 @@ class homeFragment : Fragment() {
                 }
                 currentLocationDataState.CurrentLocation?.let { currentLocation ->
                     hideLoading()
+                    sharedPreferencesManager.saveCurrentLocation(currentLocation)
                     setWeatherData(currentLocation)
                 }
                 currentLocationDataState.error?.let { error ->

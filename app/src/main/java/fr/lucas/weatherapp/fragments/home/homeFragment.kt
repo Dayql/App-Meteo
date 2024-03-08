@@ -73,13 +73,14 @@ class homeFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         setWeatherDataAdapter()
         setObservers()
+        setListeners()
         if(!isInitialLocationSet) {
             setCurrentLocation(currentLocation = sharedPreferencesManager.getCurrentLocation())
             isInitialLocationSet = true
         }
     }
 
-    private fun setListensers() {
+    private fun setListeners() {
         binding.swipeRefreshLayout.setOnRefreshListener {
             setCurrentLocation(sharedPreferencesManager.getCurrentLocation())
         }

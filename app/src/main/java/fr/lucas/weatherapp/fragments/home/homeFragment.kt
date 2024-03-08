@@ -11,6 +11,8 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.clearFragmentResultListener
+import androidx.fragment.app.setFragmentResultListener
 import androidx.navigation.fragment.findNavController
 import com.google.android.gms.location.LocationServices
 import fr.lucas.weatherapp.R
@@ -21,6 +23,13 @@ import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class homeFragment : Fragment() {
+
+    companion object {
+        const val REQUEST_KEY_MANUAL_LOCATION_SEARCH = "manualLocationSearch"
+        const val KEY_LOCATION_TEXT = "locationText"
+        const val KEY_LATITUDE = "latitude"
+        const val KEY_LONGITUDE = "longitude"
+    }
 
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = requireNotNull(_binding)
@@ -67,7 +76,7 @@ class homeFragment : Fragment() {
     private fun setObservers() {
         with(homeViewModel) {
             currentLocation.observe(viewLifecycleOwner) {
-                val currentLocationDataState = it ?: return@observe
+                val currentLocationDataState = it.getContentIfNotHandled() ?: return@observe
                 if(currentLocationDataState.isLoading) {
                     showLoading()
                 }
@@ -144,7 +153,27 @@ class homeFragment : Fragment() {
     }
 
     private fun startManualLocationSearch() {
+        startListeningManualLocationsSelection()
         findNavController().navigate(R.id.action_home_fragment_to_location_fragment)
     }
 
+    private fun startListeningManualLocationsSelection() {
+        setFragmentResultListener(REQUEST_KEY_MANUAL_LOCATION_SEARCH) { _, bundle ->
+            stopListeningManualLocationsSelection()
+            val currentLocation = CurrentLocation(
+                location = bundle.getString(KEY_LOCATION_TEXT) ?: "N/A",
+                latitude = bundle.getDouble(KEY_LATITUDE),
+                longitude = bundle.getDouble(KEY_LONGITUDE)
+            )
+            sharedPreferencesManager.saveCurrentLocation(currentLocation)
+            setWeatherData(currentLocation)
+        }
+    }
+
+    private fun stopListeningManualLocationsSelection() {
+        clearFragmentResultListener(REQUEST_KEY_MANUAL_LOCATION_SEARCH)
+    }
+
+
 }
+

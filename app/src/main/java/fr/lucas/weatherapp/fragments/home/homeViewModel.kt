@@ -7,13 +7,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.android.gms.location.FusedLocationProviderClient
 import fr.lucas.weatherapp.data.CurrentLocation
+import fr.lucas.weatherapp.data.LiveDataEvent
 import fr.lucas.weatherapp.network.repository.weatherDataRepository
 import kotlinx.coroutines.launch
 
 class homeViewModel(private val weatherDataRepository: weatherDataRepository) : ViewModel() {
 
-    private val _currentLocation = MutableLiveData<CurrentLocationDataState>()
-    val currentLocation: LiveData<CurrentLocationDataState> get() = _currentLocation
+    private val _currentLocation = MutableLiveData<LiveDataEvent<CurrentLocationDataState>>()
+    val currentLocation: LiveData<LiveDataEvent<CurrentLocationDataState>> get() = _currentLocation
 
     fun getCurrentLocation(
         fusedLocationProviderClient: FusedLocationProviderClient,
@@ -36,8 +37,17 @@ class homeViewModel(private val weatherDataRepository: weatherDataRepository) : 
 
     private fun updateAddressText (currentLocation: CurrentLocation, geocoder: Geocoder) {
         viewModelScope.launch {
-            val location = weatherDataRepository.updateAddressText(currentLocation,geocoder)
-            emitCurrentLocationUiState(currentLocation = location)
+            runCatching {
+                weatherDataRepository.updateAddressText(currentLocation,geocoder)
+            }.onSuccess { location ->
+                emitCurrentLocationUiState(currentLocation = location)
+            }.onFailure {
+                emitCurrentLocationUiState(
+                    currentLocation = currentLocation.copy(
+                        location = "N/A"
+                    )
+                )
+            }
         }
     }
 
@@ -49,7 +59,7 @@ class homeViewModel(private val weatherDataRepository: weatherDataRepository) : 
         error: String? = null
     ) {
         val CurrentLocationDataState = CurrentLocationDataState(isLoading, currentLocation, error)
-        _currentLocation.value = CurrentLocationDataState
+        _currentLocation.value = LiveDataEvent(CurrentLocationDataState)
     }
 
 

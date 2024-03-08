@@ -1,6 +1,5 @@
 package fr.lucas.weatherapp.fragments.home
 
-import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
@@ -13,13 +12,25 @@ class weatherDataAdapter (
     private val onLocationClicked: () -> Unit
 ) : RecyclerView.Adapter<weatherDataAdapter.CurrentLocationViewHolder>() {
 
+    private companion object {
+        const val INDEX_CURRENT_LOCATION = 0
+        const val INDEX_CURRENT_WEATHER = 1
+        const val INDEX_FORECAST = 2
+    }
+
+
     private val weatherData = mutableListOf<weatherData>()
 
-    @SuppressLint("NotifyDataSetChanged")
-    fun setData(data: List<weatherData>) {
-        weatherData.clear()
-        weatherData.addAll(data)
-        notifyDataSetChanged()
+
+
+    fun setCurrentLocation(currentLocation: CurrentLocation) {
+        if(weatherData.isEmpty()) {
+            weatherData.add(INDEX_CURRENT_LOCATION, currentLocation)
+            notifyItemChanged(INDEX_CURRENT_LOCATION)
+        } else {
+            weatherData[INDEX_CURRENT_LOCATION] = currentLocation
+            notifyItemChanged(INDEX_CURRENT_LOCATION)
+        }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CurrentLocationViewHolder {

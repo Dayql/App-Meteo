@@ -57,6 +57,9 @@ class homeFragment : Fragment() {
         }
     }
 
+    private var isInitialLocationSet: Boolean = false
+
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -69,8 +72,11 @@ class homeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setWeatherDataAdapter()
-        setWeatherData(currentLocation = sharedPreferencesManager.getCurrentLocation())
         setObservers()
+        if(!isInitialLocationSet) {
+            setCurrentLocation(currentLocation = sharedPreferencesManager.getCurrentLocation())
+            isInitialLocationSet = true
+        }
     }
 
     private fun setObservers() {
@@ -83,11 +89,25 @@ class homeFragment : Fragment() {
                 currentLocationDataState.CurrentLocation?.let { currentLocation ->
                     hideLoading()
                     sharedPreferencesManager.saveCurrentLocation(currentLocation)
-                    setWeatherData(currentLocation)
+                    setCurrentLocation(currentLocation)
                 }
                 currentLocationDataState.error?.let { error ->
                     hideLoading()
                     Toast.makeText(requireContext(),error, Toast.LENGTH_SHORT).show()
+                }
+            }
+            weatherData.observe(viewLifecycleOwner) {
+                val weatherDataState = it.getContentIfNotHandled() ?: return@observe
+                binding.swipeRefreshLayout.isRefreshing = weatherDataState.isLoading
+                weatherDataState.currentWeather?.let { currentWeather ->
+                    Toast.makeText(
+                        requireContext(),
+                        currentWeather.temperature.toString(),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+                weatherDataState.error?.let { error ->
+                    Toast.makeText(requireContext(), error, Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -97,8 +117,9 @@ class homeFragment : Fragment() {
         binding.weatherDataRecyclerView.adapter = weatherDataAdapter
     }
 
-    private fun setWeatherData(currentLocation: CurrentLocation? = null) {
-        weatherDataAdapter.setData(data = listOf(currentLocation ?: CurrentLocation()))
+    private fun setCurrentLocation(currentLocation: CurrentLocation? = null) {
+        weatherDataAdapter.setCurrentLocation(currentLocation ?: CurrentLocation())
+        currentLocation?.let { getWeatherData(currentLocation = it) }
 
     }
 
@@ -166,7 +187,7 @@ class homeFragment : Fragment() {
                 longitude = bundle.getDouble(KEY_LONGITUDE)
             )
             sharedPreferencesManager.saveCurrentLocation(currentLocation)
-            setWeatherData(currentLocation)
+            setCurrentLocation(currentLocation)
         }
     }
 
@@ -174,6 +195,14 @@ class homeFragment : Fragment() {
         clearFragmentResultListener(REQUEST_KEY_MANUAL_LOCATION_SEARCH)
     }
 
+    private fun getWeatherData(currentLocation: CurrentLocation) {
+        if(currentLocation.latitude != null && currentLocation.longitude != null) {
+            homeViewModel.getWeatherData(
+                latitude = currentLocation.latitude,
+                longitude = currentLocation.longitude
+            )
+        }
+    }
 
 }
 

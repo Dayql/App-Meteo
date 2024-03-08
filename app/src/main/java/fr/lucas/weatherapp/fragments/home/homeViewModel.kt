@@ -7,11 +7,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.android.gms.location.FusedLocationProviderClient
 import fr.lucas.weatherapp.data.CurrentLocation
+import fr.lucas.weatherapp.data.CurrentWeather
 import fr.lucas.weatherapp.data.LiveDataEvent
 import fr.lucas.weatherapp.network.repository.weatherDataRepository
 import kotlinx.coroutines.launch
 
 class homeViewModel(private val weatherDataRepository: weatherDataRepository) : ViewModel() {
+
+//region Current Location
 
     private val _currentLocation = MutableLiveData<LiveDataEvent<CurrentLocationDataState>>()
     val currentLocation: LiveData<LiveDataEvent<CurrentLocationDataState>> get() = _currentLocation
@@ -69,5 +72,50 @@ class homeViewModel(private val weatherDataRepository: weatherDataRepository) : 
         val error: String?
     )
 
+//endregion Current Location
+
+//region Weather Data
+
+    private val _weatherData = MutableLiveData<LiveDataEvent<WeatherDataState>>()
+    val weatherData: LiveData<LiveDataEvent<WeatherDataState>> get () = _weatherData
+
+    fun getWeatherData(latitude: Double, longitude: Double) {
+        viewModelScope.launch {
+            emitWeatherDataUiState(isLoading = true)
+            weatherDataRepository.getWeatherData(latitude, longitude)?.let { weatherData ->
+                emitWeatherDataUiState(
+                    currentWeather = CurrentWeather(
+                        icon = weatherData.current.condition.icon,
+                        temperature = weatherData.current.temperature,
+                        wind = weatherData.current.wind,
+                        humidity = weatherData.current.humidity,
+                        chanceOfRain = weatherData.forecast.forecastDay.first().day.chanceOfRain
+                    )
+                )
+            } ?: emitWeatherDataUiState(error = "Unable to fetch weather data")
+        }
+    }
+
+
+    private fun emitWeatherDataUiState(
+        isLoading: Boolean = false,
+        currentWeather: CurrentWeather? = null,
+        error: String? = null
+    ) {
+        val weatherDataState = WeatherDataState(isLoading, currentWeather, error)
+        _weatherData.value = LiveDataEvent((weatherDataState))
+    }
+
+
+
+    data class WeatherDataState (
+        val isLoading: Boolean,
+        val currentWeather: CurrentWeather?,
+        val error: String?
+    )
+
+
+
+//endregion Weather Data
 
 }

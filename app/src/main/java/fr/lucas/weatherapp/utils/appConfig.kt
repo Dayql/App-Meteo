@@ -5,6 +5,7 @@ import fr.lucas.weatherapp.dependency_injection.repositoryModule
 import fr.lucas.weatherapp.dependency_injection.serializerModule
 import fr.lucas.weatherapp.dependency_injection.storageModule
 import fr.lucas.weatherapp.dependency_injection.viewModelModule
+import fr.lucas.weatherapp.dependency_injection.networkModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
 
@@ -19,7 +20,8 @@ class appConfig : Application() {
                     repositoryModule,
                     viewModelModule,
                     serializerModule,
-                    storageModule
+                    storageModule,
+                    networkModule
                 )
             )
         }

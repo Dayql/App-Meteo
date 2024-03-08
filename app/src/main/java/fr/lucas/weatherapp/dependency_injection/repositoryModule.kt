@@ -4,5 +4,5 @@ import fr.lucas.weatherapp.network.repository.weatherDataRepository
 import org.koin.dsl.module
 
 val repositoryModule = module {
-    single { weatherDataRepository() }
+    single { weatherDataRepository(weatherAPI = get()) }
 }

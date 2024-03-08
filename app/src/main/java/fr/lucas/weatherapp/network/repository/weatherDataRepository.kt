@@ -6,8 +6,11 @@ import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
 import fr.lucas.weatherapp.data.CurrentLocation
+import fr.lucas.weatherapp.data.RemoteLocation
+import fr.lucas.weatherapp.network.api.WeatherAPI
+import retrofit2.http.Query
 
-class weatherDataRepository {
+class weatherDataRepository(private val weatherAPI: WeatherAPI) {
 
     @SuppressLint("MissingPermission")
     fun getCurrentLocation(
@@ -46,6 +49,11 @@ class weatherDataRepository {
                 location = addressText.toString()
             )
         } ?:currentLocation
+    }
+
+    suspend fun searchLocation(query: String): List<RemoteLocation>? {
+        val response = weatherAPI.searchLocation(query = query)
+        return if (response.isSuccessful) response.body() else null
     }
 
 

@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
@@ -74,9 +75,18 @@ class homeFragment : Fragment() {
         setWeatherDataAdapter()
         setObservers()
         setListeners()
-        if(!isInitialLocationSet) {
+        if (!isInitialLocationSet) {
             setCurrentLocation(currentLocation = sharedPreferencesManager.getCurrentLocation())
             isInitialLocationSet = true
+        }
+
+        view.findViewById<Button>(R.id.exitButton)?.setOnClickListener {
+            AlertDialog.Builder(requireContext())
+                .setMessage("Voulez-vous vraiment quitter l'application ?")
+                .setCancelable(false)
+                .setPositiveButton("Oui") { _, _ -> requireActivity().finish() }
+                .setNegativeButton("Non", null)
+                .show()
         }
     }
 
